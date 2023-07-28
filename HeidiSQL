@@ -1,0 +1,256 @@
+-- 회원(member) 테이블 생성
+CREATE TABLE MEMBER(
+	id VARCHAR(16) NOT NULL,
+	pw VARCHAR(330) NOT NULL,
+	NAME VARCHAR(100) NOT NULL,
+	email VARCHAR(100) NOT NULL,
+	tel VARCHAR(13),
+	regdate TIMESTAMP NOT NULL default current_timestamp(),
+	POINT INT DEFAULT 0,
+	PRIMARY KEY (id));
+
+-- 테이블 목록 보기
+show TABLE;
+
+-- 회원 테이블 구조 보기
+DESC MEMBER;
+
+INSERT INTO MEMBER(id, pw, NAME, email, tel) VALUES
+('admin', '1234', '관리자', 'admin@edu.com', '010-1004-1004');
+
+SELECT * FROM MEMBER;
+
+INSERT INTO MEMBER(id, pw, NAME, email, tel) VALUES
+('bee0', '1234', '영슬비', 'admin@edu.com', '010-1234-0224');
+
+INSERT INTO MEMBER(id, pw, NAME, email, tel) VALUES
+('bee1', '1234', '일슬비', 'sbsb@edu.com', '010-2345-9999');
+
+INSERT INTO MEMBER(id, pw, NAME, email, tel) VALUES
+('bee2', '1234', '이슬비', 'bee@edu.com', '010-5678-1004');
+
+INSERT INTO MEMBER(id, pw, NAME, email, tel) VALUES
+('bee3', '1234', '삼슬비', 'b4@edu.com', '010-6789-1004');
+
+INSERT INTO MEMBER(id, pw, NAME, email, tel) VALUES
+('bee4', '1234', '사슬비', 'sbsb@edu.com', '010-7777-7777');
+
+SELECT * FROM SELECT;
+
+CREATE TABLE board(
+	bno INT PRIMARY key AUTO_INCREMENT,
+	title VARCHAR(200) NOT NULL,
+	content VARCHAR(1000),
+	author VARCHAR(16),
+	resdate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	cnt INT DEFAULT 0);
+
+-- 게시판 테이블 구조 보기
+DESC board;
+
+-- 게시판 더미글 추가 7건
+INSERT INTO board(title, content, author) VALUES
+('더미글1', '여기는  더미글1 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글2', '여기는  더미글2 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글3', '여기는  더미글3 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글4', '여기는  더미글4 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글5', '여기는  더미글5 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글6', '여기는  더미글6 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글7', '여기는  더미글7 입니다', 'admin');
+INSERT INTO board(title, content, author) VALUES
+('더미글8', '여기는  더미글8 입니다', 'bee0');
+
+alter table board change autor author varchar(16);
+
+-- 게시판 테이블 검색
+SELECT * FROM board;
+SELECT * FROM MEMBER;
+
+DELETE FROM MEMBER WHERE id='bee4';	--아이디 bee4인 회원의 레코드 삭제
+
+UPDATE board SET author='seul' WHERE bno=5;	--글번호 5인 레코드 작성자 아이디를 seul로 변경
+
+COMMIT;
+
+-- 7번 글에 대한 작성자의 이름
+SELECT * FROM MEMBER WHERE id='admin'
+SELECT author FROM board WHERE bno=7;
+-- SELECT * FROM MEMBER SELECT author FROM board WHERE bno=7;
+-- 8번 글에 대한 작성자 이름
+SELECT author FROM board WHERE bno=8;
+
+
+-- 유사 검색
+SELECT * FROM MEMBER WHERE NAME LIKE '영%'; -- '영'으로 시작되는 NAME을 select
+SELECT * FROM MEMBER WHERE NAME LIKE '%슬%'; -- '슬'이 가운데 들어간 NAME을 select
+
+-- 일치 검색 : 
+SELECT * FROM MEMBER WHERE NAME IN ('영슬비','일슬비','삼슬비'); 	-- 입력한 내용과 같은 NAME select
+-- 아래처럼하면 위와 동일한 결과 나옴
+SELECT * FROM MEMBER WHERE NAME='영슬비' OR NAME='일슬비' OR NAME='삼슬비'); 
+
+-- 중복성 제거 : 
+SELECT DISTINCT author FROM board;
+
+-- 구간검색	ex.글번호 3~6번까지 확인할 때
+SELECT * FROM board WHERE bno >3 AND bon <=6;
+SELECT * FROM board WHERE bno BETWEEN 3 AND 6;
+SELECT * FROM board LIMIT 2,4;
+-- Mariadb,mySQL에서는 LIMIT 많이 사용, LIMTIT 기준숫자, 개수
+
+-- 이중쿼리(=, >=, <=, !=)
+SELECT id, NAME FROM MEMBER WHERE id=(SELECT author FROM board WHERE bno=8);
+-- 일치 검색
+SELECT id, NAME FROM MEMBER WHERE id IN(SELECT author FROM board);
+-- 불일치 검색(not~in~)
+SELECT id, NAME FROM MEMBER WHERE id not IN(SELECT author FROM board);
+
+
+-- 연관쿼리와 join
+-- 연관쿼리(alias 활용, AS로 입력)
+SELECT * FROM MEMBER a, board b;	-- 5 * 8 -> 40건
+SELECT a.id, a.name, a.email, b.bno, b.title FROM MEMBER a, board b;
+SELECT a.id AS pid, a.name AS pname, a.email AS pemail , b.bno AS pno, b.title AS ptitle FROM MEMBER a, board b;
+SELECT a.id AS pid, a.name AS pname, a.email AS pemail , b.bno AS pno, b.title AS ptitle FROM MEMBER a, board b WHERE a.id=b.author; -- 게시판에 글을 올린 회원정보와 글 정보를 모두 표시
+
+
+-- 내부 조인
+SELECT a.id, a.name, a.email, b.bno, b.title FROM MEMBER a INNER JOIN board b ON a.id=b.author;
+
+
+-- 테이블 복제 : 키에 대한 복제는 이루어지지 않는다.
+CREATE TABLE board2 AS SELECT * FROM board;
+-- 기본 키 추가
+ALTER TABLE board2 ADD CONSTRAINT PRIMARY KEY (bno);
+-- 컬럼 수정 - auto_increment 추가
+ALTER TABLE board2 MODIFY bno INT AUTO_INCREMENT;
+
+SELECT * FROM board2;
+
+DESC board2;
+-- 내부 조인을 하나의 뷰로 생성
+CREATE VIEW writer_info AS (SELECT a.id, a.name, a.email, b.bno, b.title FROM MEMBER a INNER JOIN board b ON a.id=b.author);
+
+-- 생성된 뷰의 결과 출력
+SELECT * FROM writer_info;
+
+-- 테이블 만들기 및 예시 데이터 추가
+-- 테이블명 : 상품(goods)
+-- 상품코드 : gcode - 정수 / 일련번호(기본키) - 필수입력
+-- 상품명 : gname - 문자열(150) - 필수입력
+-- 종류 : gcate - 문자열(40) - 필수입력
+-- 단가 : gprice - 정수 - 필수입력
+-- 수량 : gqty - 정수 - 기본값:0
+-- 등록일 : regdate - 날짜 - 기본값:오늘날짜 및 시간
+
+CREATE TABLE goods(
+	gcode int PRIMARY key AUTO_INCREMENT ,
+	gname VARCHAR(150) NOT NULL,
+	gcate VARCHAR(40) NOT NULL,
+	gprice INT NOT NULL,
+	gqty INT DEFAULT 0,
+	regdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+	
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('햄과 햄스터', '도서', '12000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('햄과 햄스터', '도서', '12000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('자바의 정석-기초편', '도서', '28000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('자바의 정석-고급편', '도서', '32000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('자기PR시대 자소서 작성법', '온라인 강의', '77000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('박나연의 몬스타엑스', '온라인 강의', '66000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('개발나라에서 살아남기', '온라인 강의', '180000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('즐거운 회사생활하기', '온라인 강의', '90000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('즐거운 인생이란', '오프라인 강의', '99000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('우리아이 잘키우기', '오프라인 강의', '30000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('이슬비의 코린이 탈출하기', '오프라인 강의', '99000');
+INSERT INTO goods(gname, gcate, gprice) VALUES
+('김기태의 코딩 콘서트', '오프라인 강의', '99000');
+
+SELECT * FROM goods
+
+-- 테이블명 : 판매(sales)
+-- 판매코드 : pcode - 정수 / 일련번호(기본키) - 필수입력
+-- 상품코드 : gcode - 정수 - 필수입력
+-- 구매자 : id - 문자열(16) 필수입력
+-- 수량 : qty - 정수 - 기본값:1 -필수입력
+-- 구매단가 : sprice - 정수 - 필수입력
+-- 결제수단 : stype - 정수 - 필수입력
+-- 할인금액 : distotal - 정수
+-- 결제금액 : paytotal - 정수
+-- 총금액 : stotal - 정수
+-- 판매일 : saledate - 날짜 - 기본값:오늘날짜 및 시간
+
+CREATE TABLE sales(
+	pcode INT PRIMARY key AUTO_INCREMENT ,
+	gcode INT NOT NULL,
+	id VARCHAR(16) NOT NULL,
+	qty INT NOT NULL DEFAULT 1,
+	sprice INT NOT NULL,
+	stype INT NOT NULL,
+	distotal INT,
+	paytotal INT,
+	stotal INT, 
+	saledate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+	
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('햄과 햄스터', '도서', '12000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('햄과 햄스터', '도서', '12000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('자바의 정석-기초편', '도서', '28000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('자바의 정석-고급편', '도서', '32000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('자기PR시대 자소서 작성법', '온라인 강의', '77000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('박나연의 몬스타엑스', '온라인 강의', '66000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('개발나라에서 살아남기', '온라인 강의', '180000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('즐거운 회사생활하기', '온라인 강의', '90000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('즐거운 인생이란', '오프라인 강의', '99000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('우리아이 잘키우기', '오프라인 강의', '30000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('이슬비의 코린이 탈출하기', '오프라인 강의', '99000');
+INSERT INTO sales(gname, gcate, gprice) VALUES
+('김기태의 코딩 콘서트', '오프라인 강의', '99000');
+
+
+-- 더미데이터는 본인이 임의로 각자 12건 이상 추가하되,
+-- 상품 데이터는 교육, 서적, 동영상강의 등의 카테고리를 본인이 정하여 추가할 것 
+-- 현재 회원과 현존하는 상품 내용을 기준으로 구매한 판매데이터를 추가할 것
+
+SHOW TABLEs;
+
+
+
+-- sort(소트) = 분류, 순서정렬
+SELECT * FROM board;
+
+-- 읽은 횟수 증가
+UPDATE board SET cnt=cnt+1 WHERE bno=2;
+
+-- order by : 정리
+-- SQL에서는 order by가 중간에 와도 되지만, 다른 곳에서는 문장 뒤에 위치해야함.
+SELECT * FROM board ORDER BY author ASC, cnt desc;
+
+-- 그룹화 및 집계 (group by -> count, sum, avg, max, min, std(표준편차)
+SELECT author, COUNT(author) FROM board GROUP BY author;
